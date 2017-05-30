@@ -1,5 +1,4 @@
-# MCP4725
-Arduino Library for the MCP4725 Digital to Analog Converter (DAC) chip.
+# Arduino Library for MCP4725 Digital to Analog Converter (DAC)
 
 The MCP4725 Digital to Analog Converters is one of the most popular 12-bit DACs, with breakout boards made by both Adafruit and Sparkfun. Unfortunately, the Adafruit library and other libraries I could find for this chip were very incomplete, exposing only the most basic features of the device, and were coded rather poorly. But the device has a variety of interesting features that are neither exposed nor supported by the existing libraries. Examples include putting the device into one of its three sleep modes, and writing to it in Fast-Mode, among others. Since I needed to use some of those features for a project, I ended up wiring my own library, which I am now sharing with with world. 
 
