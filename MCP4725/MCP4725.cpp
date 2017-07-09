@@ -38,8 +38,10 @@ void MCP4725::setVoltageAndSave(uint16_t output){
   *[Addr.Byte]+[C2,C1,C0,x,x,PD1,PD0,x]+[D11,D10,D9,D8,D7,D6,D5,D4]+[D3,D2,D1,D0,x,x,x,x]  */
   Wire.beginTransmission(_i2caddr);
   Wire.write(WRITEDACEEPROM); //[C2,C1,C0,x,x,PD1,PD0,x]=[0,1,1,0,0,0,0,0]
-  uint8_t firstbyte=(output>>4);//(D11.D10.D9.D8.D7.D6.D5.D4)
-  uint8_t secndbyte=(output<<8);//(D3.D2.D1.D0.x.x.x.x)
+  /*The 12-bit output is in 16-bit form (0,0,0,0,D11.D10.D9.D8.D7.D6.D5.D4,D3.D2.D1.D0).*/
+  uint8_t firstbyte=(output>>4);//(0,0,0,0,0,0,0,0,D11.D10.D9.D8.D7.D6.D5.D4) of which only the 8 LSB's survive
+  output = output << 12;	//(D3.D2.D1.D0,0,0,0,0,0,0,0,0,0,0,0,0) 
+  uint8_t secndbyte=(output>>8);//(0,0,0,0,0,0,0,0,D3,D2,D1,D0,0,0,0,0)	of which only the 8 LSB's survive.
   Wire.write(firstbyte); 
   Wire.write(secndbyte);
   Wire.endTransmission();
@@ -49,9 +51,10 @@ void MCP4725::setVoltage(uint16_t output){
   *[Addr.Byte]+[C2,C1,C0,x,x,PD1,PD0,x]+[D11,D10,D9,D8,D7,D6,D5,D4]+[D3,D2,D1,D0,x,x,x,x]  */
   Wire.beginTransmission(_i2caddr);
   Wire.write(WRITEDAC); //[C2,C1,C0,x,x,PD1,PD0,x]=[0,1,0,0,0,0,0,0]
-  /*The 16-bit output is in the form (0,0,0,0,D11.D10.D9.D8.D7.D6.D5.D4,D3.D2.D1.D0).*/
-  uint8_t firstbyte=(output>>4);//(D11.D10.D9.D8.D7.D6.D5.D4)
-  uint8_t secndbyte=(output<<8);//(D3.D2.D1.D0.x.x.x.x)
+  /*The 12-bit output is in 16-bit form (0,0,0,0,D11.D10.D9.D8.D7.D6.D5.D4,D3.D2.D1.D0).*/
+  uint8_t firstbyte=(output>>4);//(0,0,0,0,0,0,0,0,D11.D10.D9.D8.D7.D6.D5.D4) of which only the 8 LSB's survive
+  output = output << 12;	//(D3.D2.D1.D0,0,0,0,0,0,0,0,0,0,0,0,0) 
+  uint8_t secndbyte=(output>>8);//(0,0,0,0,0,0,0,0,D3,D2,D1,D0,0,0,0,0)	of which only the 8 LSB's survive.
   Wire.write(firstbyte); 
   Wire.write(secndbyte);
   Wire.endTransmission();
@@ -60,10 +63,11 @@ void MCP4725::setVoltageFast( uint16_t output){
  /*For Fast-Speed:
   *[Addr.Byte]+[C2,C1,PD1,PD0,D11,D10,D9,D8],[D7,D6,D5,D4,D3,D2,D1,D0]  */
   Wire.beginTransmission(_i2caddr);
-  uint8_t firstbyte=(output>>8); //[0,0,0,0,0,0,0,0,0,0,0,0,x11,x10,x9,x8]
-  uint8_t secndbyte=(output);
-  Wire.write(firstbyte);  // Upper data bits          (D11.D10.D9.D8.D7.D6.D5.D4)
-  Wire.write(secndbyte);  // Lower data bits          (D3.D2.D1.D0.x.x.x.x)
+  //output is a 12-bit value in 16-bit form, namely: [0,0,0,0,x11,x10,x9,x8,x7,x6,x5,x4,x3,x2,x1,x0]
+  uint8_t firstbyte=(output>>8); //[0,0,0,0,0,0,0,0,0,0,0,0,x11,x10,x9,x8] only the 8 LSB's survive
+  uint8_t secndbyte=(output); //only the 8 LSB's survive.
+  Wire.write(firstbyte);  // Upper data bits (0,0,0,0,x11,x10,x9,x8)       
+  Wire.write(secndbyte);  // Lower data bits (x7,x6,x5,x4,x3,x2,x1,x0)
   Wire.endTransmission();
 }
 void MCP4725::powerDown1kPullDown(){ //[PD1,PD0]=01; [C2,C1,C0]=010 - Write to DAC only
