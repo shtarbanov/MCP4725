@@ -107,6 +107,23 @@ void MCP4725::powerDown500kPullDown(){//[PD1,PD0]=11; [C2,C1,C0]=010 - Write to 
   Wire.endTransmission();
 }
 
+uint16_t MCP4725::readCurrentDacVal(){
+  Wire.requestFrom(_i2caddr, (uint8_t) 5);
+  while(Wire.available()!=5){
+    Serial.println("Waiting for readValFromEEPROM() to complete.");
+    //just wait for a while until the DAC sends the data to the reabuffer
+  }
+  Wire.read(); //status
+  uint8_t upper8bits = Wire.read(); //DAC Register data (D11,D10,D9,D8,D7,D6,D5,D4)
+  uint8_t lower8bits = Wire.read(); //DAC Register data (D3,D2,D1,D0,0,0,0,0)
+  Wire.read(); //forth returned byte is EEPROM data (x,PD1,PD0,x,D11,D10,D9,D8) 
+  Wire.read(); //fifth returned byte is EEPROM data (D7,D6,D5,D4,D3,D2,D1,D0)
+
+  /*We now need to return the value (0,0,0,0,D11,D10,D9,D8,D7,D6,D5,D4,D3,D2,D1,D0). */
+  return (upper8bits<<4) | (lower8bits>>4); //This is how we get the 16-bit result we want to return.
+}
+
+
 uint16_t MCP4725::readValFromEEPROM(){
   Wire.requestFrom(_i2caddr, (uint8_t) 5);
   while(Wire.available()!=5){
@@ -115,7 +132,7 @@ uint16_t MCP4725::readValFromEEPROM(){
   }
   uint8_t statusBit = Wire.read() >> 7; 
   Wire.read(); //secnd returned byte is DAC Register data (upper 8 bits)
-  Wire.read(); //third returned byte is DAC Register date (lower 4 bits + 0000)
+  Wire.read(); //third returned byte is DAC Register data (lower 4 bits + 0000)
   uint8_t upper8bits = Wire.read(); //forth returned byte is EEPROM data (x,PD1,PD0,x,D11,D10,D9,D8)
   uint8_t lower8bits = Wire.read(); //fifth returned byte is EEPROM data (D7,D6,D5,D4,D3,D2,D1,D0)
   
