@@ -15,6 +15,7 @@ class MCP4725{
   void powerDown500kPullDown();
   void powerDown100kPullDown();
   void powerDown1kPullDown();
+  uint16_t readValFromEEPROM();
  private:
   uint8_t _i2caddr;
 };
